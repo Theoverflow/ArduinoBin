@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<head>
+  <base href="/threejs/">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Bienvenue dans mon univers</title>
+	<!-- include three.js library -->
+	<script src='js/three.js'></script>
+  <script src='js/GLTFLoader.js'></script>
+	<!-- include jsartookit -->
+	<script src="jsartoolkit5/artoolkit.min.js"></script>
+	<script src="jsartoolkit5/artoolkit.api.js"></script>
+	<!-- include threex.artoolkit -->
+	<script src="threex/threex-artoolkitsource.js"></script>
+	<script src="threex/threex-artoolkitcontext.js"></script>
+	<script src="threex/threex-arbasecontrols.js"></script>
+	<script src="threex/threex-armarkercontrols.js"></script>
+</head>
+
+<body style='margin : 0px; overflow: hidden; font-family: Segoe UI;'>
+
+  <video id="video" autoplay loop crossOrigin="anonymous" webkit-playsinline style="display:none">
+    <source src="video/energy sphere.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+  </video>
+
+  <style>
+    @font-face {
+     font-family: "Lato";
+     src: url("./fonts/Lato/Lato-Regular.ttf") format("truetype");
+    }
+  
+    .btn{
+      width: 100%;
+      border-radius: 5px; 
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .fullscreen {
+      background-image: url("images/full-screen.png");
+      width: 20px;
+      height: 20px;
+      background-repeat: no-repeat;
+      background-size: 20px;
+    }
+    
+    .exit-fullscreen {
+      background-image: url("images/exit-full-screen.png");
+      width: 20px;
+      height: 20px;
+      background-repeat: no-repeat;
+      background-size: 20px;
+    }
+    
+    .snack {
+      bottom: 8px;
+      align-items: center;
+      color: #fff;
+      display: flex;
+      font-size: .875rem;
+      left: 8px;
+      pointer-events: none;
+      position: fixed;
+      right: 8px;
+      transition-duration: .15s;
+      transition-timing-function: cubic-bezier(0,0,.2,1);
+      z-index: 1000;
+    }
+    
+    .snack__wrapper {
+      align-items: center;
+      background-color: #323232;
+      border-radius: 4px;
+      display: flex;
+      margin: 0 auto;
+      pointer-events: auto;
+      transition: inherit;
+      transition-property: opacity,transform;
+      min-width: 100%;
+      box-shadow: 0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12);
+    }
+    
+    .snack__content {
+      align-items: center;
+      display: flex;
+      min-height: 48px;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: 8px 16px;
+      width: 100%;
+    }
+    
+    .loading-wrapper {
+      position: absolute;
+      width: 100%;
+      left: 50%; 
+      top: 50%; 
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    
+    .text-panel {
+      background-color: rgba(255,255,255, 0.5);
+      width: fit-content;
+      border: 2px rgba(255,255,255, 0.5) solid;
+      border-radius: 8px;
+      font-family: "Lato";
+      font-size: 18px;
+      padding: 4px;
+      z-index: 1;
+      position: fixed;
+    } 
+    
+	/* generated based on 'atom' from https://icons8.com/cssload/en/spinners/2 */
+      .cssload-loader {
+        position: absolute;
+        left: 50%; 
+        top: 50%; 
+        transform: translate(-50%, -50%);
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+          -o-border-radius: 50%;
+          -ms-border-radius: 50%;
+          -webkit-border-radius: 50%;
+          -moz-border-radius: 50%;
+        perspective: 780px;
+      }
+
+      .cssload-inner {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+          -o-box-sizing: border-box;
+          -ms-box-sizing: border-box;
+          -webkit-box-sizing: border-box;
+          -moz-box-sizing: border-box;
+        border-radius: 50%;
+          -o-border-radius: 50%;
+          -ms-border-radius: 50%;
+          -webkit-border-radius: 50%;
+          -moz-border-radius: 50%;
+      }
+
+      .cssload-inner.cssload-one {
+        left: 0%;
+        top: 0%;
+        animation: cssload-rotate-one 1.15s linear infinite;
+          -o-animation: cssload-rotate-one 1.15s linear infinite;
+          -ms-animation: cssload-rotate-one 1.15s linear infinite;
+          -webkit-animation: cssload-rotate-one 1.15s linear infinite;
+          -moz-animation: cssload-rotate-one 1.15s linear infinite;
+        border-bottom: 3px solid rgb(0,0,0);
+      }
+
+      .cssload-inner.cssload-two {
+        right: 0%;
+        top: 0%;
+        animation: cssload-rotate-two 1.15s linear infinite;
+          -o-animation: cssload-rotate-two 1.15s linear infinite;
+          -ms-animation: cssload-rotate-two 1.15s linear infinite;
+          -webkit-animation: cssload-rotate-two 1.15s linear infinite;
+          -moz-animation: cssload-rotate-two 1.15s linear infinite;
+        border-right: 3px solid rgb(0,0,0);
+      }
+
+      .cssload-inner.cssload-three {
+        right: 0%;
+        bottom: 0%;
+        animation: cssload-rotate-three 1.15s linear infinite;
+          -o-animation: cssload-rotate-three 1.15s linear infinite;
+          -ms-animation: cssload-rotate-three 1.15s linear infinite;
+          -webkit-animation: cssload-rotate-three 1.15s linear infinite;
+          -moz-animation: cssload-rotate-three 1.15s linear infinite;
+        border-top: 3px solid rgb(0,0,0);
+      }
+
+      @keyframes cssload-rotate-one {
+        0% {
+          transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+        }
+        100% {
+          transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+        }
+      }
+
+      @-o-keyframes cssload-rotate-one {
+        0% {
+          -o-transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+        }
+        100% {
+          -o-transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+        }
+      }
+
+      @-ms-keyframes cssload-rotate-one {
+        0% {
+          -ms-transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+        }
+        100% {
+          -ms-transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+        }
+      }
+
+      @-webkit-keyframes cssload-rotate-one {
+        0% {
+          -webkit-transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+        }
+        100% {
+          -webkit-transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+        }
+      }
+
+      @-moz-keyframes cssload-rotate-one {
+        0% {
+          -moz-transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+        }
+        100% {
+          -moz-transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+        }
+      }
+
+      @keyframes cssload-rotate-two {
+        0% {
+          transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+        }
+        100% {
+          transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+        }
+      }
+
+      @-o-keyframes cssload-rotate-two {
+        0% {
+          -o-transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+        }
+        100% {
+          -o-transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+        }
+      }
+
+      @-ms-keyframes cssload-rotate-two {
+        0% {
+          -ms-transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+        }
+        100% {
+          -ms-transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+        }
+      }
+
+      @-webkit-keyframes cssload-rotate-two {
+        0% {
+          -webkit-transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+        }
+        100% {
+          -webkit-transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+        }
+      }
+
+      @-moz-keyframes cssload-rotate-two {
+        0% {
+          -moz-transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+        }
+        100% {
+          -moz-transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+        }
+      }
+
+      @keyframes cssload-rotate-three {
+        0% {
+          transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+        }
+        100% {
+          transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+        }
+      }
+
+      @-o-keyframes cssload-rotate-three {
+        0% {
+          -o-transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+        }
+        100% {
+          -o-transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+        }
+      }
+
+      @-ms-keyframes cssload-rotate-three {
+        0% {
+          -ms-transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+        }
+        100% {
+          -ms-transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+        }
+      }
+
+      @-webkit-keyframes cssload-rotate-three {
+        0% {
+          -webkit-transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+        }
+        100% {
+          -webkit-transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+        }
+      }
+
+      @-moz-keyframes cssload-rotate-three {
+        0% {
+          -moz-transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+        }
+        100% {
+          -moz-transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+        }
+      }
+  </style>
+  
+  <style>  
+    .smart-light-control-panel {
+      position: absolute;
+      /*width: 100%;*/
+      left: 50%; 
+      top: 50%; 
+      transform: translate(-50%, -50%);
+    }
+  
+    .two-col {
+      display: flex;
+      background-color: #f3f2f1;
+      color: #545352;
+      border-radius: 5px;
+      margin: 10px;
+      padding: 10px;
+      width: 350px;
+      height: 320px;
+    }
+    
+    .action-col{
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .led-btn{
+      font-family: Lato;
+      text-align: center;
+      margin: 10px;
+      padding: 10px;
+      font-size: 15px;
+      
+      border-radius: 5px;
+      background-color: #e5e5f1;
+      
+      cursor: pointer;
+    }
+    
+    .led-btn.active {
+      background-color: #d0d0da;
+    }
+  </style>
+
+  <div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+    <div id="fullscreen-btn" onclick="requestFullScreen(document.body)" class="fullscreen"></div>
+  </div>
+  
+  <div id="snack" class="snack" style="visibility: hidden">
+    <div role="alert" class="snack__wrapper">
+      <div class="snack__content" id="msg-snackbar"></div>
+    </div>
+  </div>
+  
+  <div id="loading-wrapper" class="loading-wrapper">
+    <div id="spinner" class="cssload-loader">
+      <div class="cssload-inner cssload-one"></div>
+      <div class="cssload-inner cssload-two"></div>
+      <div class="cssload-inner cssload-three"></div>
+    </div>
+    <div id="loading-msg-label" style="margin-top: 80px;"></div>
+  </div>
+  
+  <div id="resolve-cube-wrapper" class="text-panel" style="display: none">
+    <div>Cacher ce marqueur pour me voir résoudre ce Rubik's cube</div>
+    <!--<button onClick="resolveRubiksCube()" class="btn">Oui</button>-->
+  </div>
+  
+  <div id="start-marker-wrapper" class="text-panel" style="display: none">
+    <div>Start</div>
+  </div>
+  
+  <div id="end-marker-wrapper" class="text-panel" style="display: none">
+    <div>End</div>
+  </div>
+  
+  <div id="smart-light-control-panel" style="display: none" class="text-panel smart-light-control-panel">
+    <div class="two-col">
+      <div class="colorPicker" id="colorWheelDemo"></div>
+      
+      <div class="action-col">
+        <div id="switchOffBtn" class="led-btn" onClick="switchOff()">Off</div>
+        <div id="blinkBtn" class="led-btn" onClick="blink()">Blink</div>
+        <div id="turnBtn" class="led-btn" onClick="turn()">Circle</div>
+        <div id="closeLedControlPanelBtn" class="led-btn" onClick="closeLedControlPanel()">Close</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    var scene, camera, renderer, clock, deltaTime, totalTime;
+
+    var arToolkitSource, arToolkitContext;
+
+    var configArray = [];
+
+    var loader = new THREE.TextureLoader();
+    var threeGLTFLoader = new THREE.GLTFLoader();
+    var mixers = [];
+    
+    var videoMarker;
+
+    function initialize(){
+      scene = new THREE.Scene();
+
+      let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.5 );
+      scene.add( ambientLight );
+            
+      //camera = new THREE.Camera();
+      camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+      scene.add(camera);
+
+      renderer = new THREE.WebGLRenderer({
+        antialias : true,
+        alpha: true
+      });
+      renderer.setClearColor(new THREE.Color('lightgrey'), 0);
+      renderer.setSize( 1280, 720 );
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = '0px';
+      renderer.domElement.style.left = '0px';
+      
+      document.body.appendChild( renderer.domElement );
+
+      clock = new THREE.Clock();
+      deltaTime = 0;
+      totalTime = 0;
+      
+      ////////////////////////////////////////////////////////////
+      // setup arToolkitSource
+      ////////////////////////////////////////////////////////////
+
+      arToolkitSource = new THREEx.ArToolkitSource({
+        sourceType : 'webcam',
+      });
+
+      function onResize()
+      {
+        arToolkitSource.onResize()	
+        arToolkitSource.copySizeTo(renderer.domElement)	
+        if ( arToolkitContext.arController !== null )
+        {
+          arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+        }	
+      }
+
+      arToolkitSource.init(function onReady(){
+        onResize();
+        document.getElementById('loading-wrapper').style.display = 'none';
+        clearInterval(loadingMsgInterval);
+      });
+      
+      // handle resize event
+      window.addEventListener('resize', function(){
+        onResize()
+      });
+      
+      ////////////////////////////////////////////////////////////
+      // setup arToolkitContext
+      ////////////////////////////////////////////////////////////	
+
+      // create arToolkitContext https://jeromeetienne.github.io/AR.js/three.js/
+      arToolkitContext = new THREEx.ArToolkitContext({
+        cameraParametersUrl: 'data/camera_para.dat',
+        detectionMode: "color",
+        patternRatio: 0.85
+      });
+      
+      // copy projection matrix to camera when initialization complete
+      arToolkitContext.init( function onCompleted(){
+        camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+      });
+
+      ////////////////////////////////////////////////////////////
+      // setup scene
+      ////////////////////////////////////////////////////////////
+      
+      setupScene();
+
+      ////////////////////////////////////////////////////////////
+      // add light to scene
+      ////////////////////////////////////////////////////////////
+      let pointLight = new THREE.PointLight( 0xffffff, 1, 50 );
+      camera.add( pointLight );
+    }
+
+    function setupScene(){
+      // misc elements that are common to both universe   
+      addImageMarker();
+      addFlowerPotMarker();
+      addHypnoticFlowerMarker();
+      addBeeMarker();
+      addVideoMarker();
+      addRubiksCubeMarker();    
+      addIndoorPlantMarker();
+      addMovingBeeMarker();      
+      addSolarStationMarker();
+      addLedControlPanel();
+      
+      // mode specific elements
+      addSpaceCubeMarker();    
+      addEnergyCapsuleMarker();
+      addUtilityRobotMarker();
+      addPainterlyFlowersMarker();
+      addFlydroidMarker();
+    }
+
+    function addImageMarker(){
+      // build markerControls
+      let markerGroup = new THREE.Group();
+      scene.add(markerGroup);
+      new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+        type: 'pattern', patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-1.patt"
+      });
+
+      
+      var loader = new THREE.TextureLoader();
+
+      let geometry = new THREE.PlaneGeometry(1.2, 1.2)
+        
+      let imgMesh = new THREE.Mesh(
+        geometry, 
+        new THREE.MeshBasicMaterial({
+          map:loader.load("images/beach.jpg"), transparent: true
+        })
+      );
+      imgMesh.position.x = 0;
+      imgMesh.position.z = 0;
+      imgMesh.position.y = 0;
+     
+      imgMesh.id = 'beach-img';
+      imgMesh.rotation.x = -Math.PI/2;
+      imgMesh.rotation.z = Math.PI;
+      //imgMesh.translateZ( -0.5 );
+      markerGroup.add(imgMesh);
+    }
+    
+    function addBeeMarker(){      
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-4.patt",
+        modelPath: "models/gltf/bee/scene.gltf",
+        modelName: "Idle bee",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.1, y: 0.1, z: 0.1},
+        rotation: { x: 0, y: 0, z: 0},
+        runAnimation: true
+      };
+      
+      add3dModel(config);
+    }
+    
+    var movingBeeConfig;
+    function addMovingBeeMarker(){      
+      movingBeeConfig = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-16.patt",
+        modelPath: "models/gltf/bee/scene.gltf",
+        modelName: "Flying bee",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.05, y: 0.05, z: 0.05},
+        rotation: { x: 0, y: -Math.PI/2, z: Math.PI/2},
+        runAnimation: true,
+        animationNumber: 1
+      };
+      
+      add3dModel(movingBeeConfig);
+    }
+    
+    function addFlowerPotMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-2.patt",
+        modelPath: "models/gltf/flower_with_vase/scene.gltf",
+        modelName: "Flower pot",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.5, y: 0.5, z: 0.5},
+        runAnimation: false
+      };
+      
+      add3dModel(config);
+    }
+    
+    function addPainterlyFlowersMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-12.patt",
+        modelPath: "models/gltf/painterly_egg-flower_school_project/scene.gltf",
+        modelName: "Painterly egg flower",
+        position: { x: 2.5, y: -1.80, z: -1.80},
+        scale: { x: 0.2, y: 0.2, z: 0.2},
+        runAnimation: false,
+        alternateConfig: {
+          modelPath: "models/gltf/painterly_hell_flower/scene.gltf",
+          modelName: "Painterly hell flower",
+          position: { x: 2.7, y: -1.7, z: 0},
+          scale: { x: 0.2, y: 0.2, z: 0.2},
+          runAnimation: false
+        }
+      };
+      
+      add3dModel(config);
+    }
+    
+    function addIndoorPlantMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-7.patt",
+        modelPath: "models/gltf/purple_flowers/scene.gltf",
+        modelName: "Purple flowers",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.015, y: 0.015, z: 0.015},
+        rotation: { x: 0, y: Math.PI, z: 0},
+        runAnimation: false,
+        alternateConfig: {
+          modelPath: "models/gltf/monster_flower/scene.gltf",
+          modelName: "Monster flower",
+          position: { x: 0, y: 0, z: 0},
+          scale: { x: 0.12, y: 0.12, z: 0.12},
+          runAnimation: false
+        }
+      };
+      
+      add3dModel(config);
+    }
+    
+    function addHypnoticFlowerMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-3.patt",
+        modelPath: "models/gltf/hypnotic_flower/scene.gltf",
+        modelName: "Hyptonic flower",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.05, y: 0.05, z: 0.05},
+        rotation: { x: -Math.PI/2, y: 0, z: 0},
+        runAnimation: true
+      };
+      
+      add3dModel(config);
+    }
+    
+    function addUtilityRobotMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-11.patt",
+        modelPath: "models/gltf/utility_robot/scene.gltf",
+        modelName: "Utility robot",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.05, y: 0.05, z: 0.05},
+        rotation: { x: -Math.PI/2, y: 0, z: 0},
+        runAnimation: false,
+        alternateConfig: {
+          modelPath: "models/gltf/p.u.c._security_bot_7/scene.gltf",
+          modelName: "Security bot",
+          position: { x: 0, y: 0, z: 0.5},
+          scale: { x: 0.5, y: 0.5, z: 0.5},
+          rotation: { x: -Math.PI/2, y: 0, z: 0},
+          runAnimation: true
+        }
+      };
+      
+      add3dModel(config);
+    }
+
+    function addSecurityBotMarker(){
+    
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-11.patt",
+        modelPath: "models/gltf/p.u.c._security_bot_7/scene.gltf",
+        modelName: "Security bot",
+        position: { x: 0, y: 0, z: 0.5},
+        scale: { x: 0.5, y: 0.5, z: 0.5},
+        rotation: { x: -Math.PI/2, y: 0, z: 0},
+        runAnimation: true
+      };
+      add3dModel(config);
+    }
+    
+    function addFlydroidMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-13.patt",
+        modelPath: "models/gltf/day2_flydroid/scene.gltf",
+        modelName: "Flydroid",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 1, y: 1, z: 1},
+        rotation: { x: -Math.PI/2, y: 0, z: 0},
+        runAnimation: false,
+        alternateConfig: {
+          modelPath: "models/gltf/xyz_daily._day_2._drone/scene.gltf",
+          modelName: "Drone",
+          position: { x: 0, y: 0.8, z: 0},
+          scale: { x: 0.005, y: 0.005, z: 0.005},
+          rotation: { x: -Math.PI/2, y: 0, z: 0},
+          runAnimation: false
+        }
+      };
+      
+      add3dModel(config);
+    }
+
+    function addSpaceCubeMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-9.patt",
+        modelPath: "models/gltf/space_cube/scene.gltf",
+        modelName: "Space cube",
+        position: { x: -0.62, y: 0, z: 0.62},
+        scale: { x: 0.025, y: 0.025, z: 0.025},
+        runAnimation: false
+      };
+      
+      add3dModel(config);
+    }
+    
+    var ledControlPanelDiv = document.getElementById("smart-light-control-panel");
+    var ledControlPanelCfg = undefined;
+    function addLedControlPanel(){
+      ledControlPanelCfg = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-6.patt",
+      };
+      
+      // add main marker group
+      let markerGroup = new THREE.Group();
+      ledControlPanelCfg.markerGroup = markerGroup;
+      scene.add(markerGroup);
+      new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+        type: 'pattern', patternUrl: ledControlPanelCfg.patternUrl
+      });
+    }
+    
+    var rubiksCubeModelCfg;
+    var resolveCubeDiv;
+    function addRubiksCubeMarker(){
+      rubiksCubeModelCfg = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-14.patt",
+        redundantPattern: "marker-pattern/patt/pattern-Individual_Blocks-15.patt",
+        modelPath: "models/gltf/rubiks_cube_3d/scene.gltf",
+        modelName: "Rubiks cube",
+        position: { x: -0.25, y: 0, z: 0.25},
+        scale: { x: 0.15, y: 0.15, z: 0.15},
+        runAnimation: false
+      };
+      
+      resolveCubeDiv = document.getElementById('resolve-cube-wrapper');
+
+      // load 3D model in a group without marker
+      var sceneGroup = new THREE.Group();
+      scene.add(sceneGroup);
+      rubiksCubeModelCfg.sceneGroup = sceneGroup;
+      
+      load3dModel(rubiksCubeModelCfg, rubiksCubeModelCfg.sceneGroup);
+      
+      // add main marker group
+      let markerGroup = new THREE.Group();
+      rubiksCubeModelCfg.markerGroup = markerGroup;
+      scene.add(markerGroup);
+      new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+        type: 'pattern', patternUrl: rubiksCubeModelCfg.patternUrl
+      });
+      
+      let markerSubGroup = new THREE.Group();
+      markerGroup.add(markerSubGroup);
+
+      // add redundant marker (used when main marker is hidden)
+      let anchorMarkerGroup = new THREE.Group();
+      scene.add(anchorMarkerGroup);
+      new THREEx.ArMarkerControls(arToolkitContext, anchorMarkerGroup, {
+        type: 'pattern', patternUrl: rubiksCubeModelCfg.redundantPattern,
+      });
+      
+      let anchorMarkerSubGroup = new THREE.Group();
+      anchorMarkerGroup.add(anchorMarkerSubGroup);
+      
+      // keep reference of both markers in an array
+      let rubiksMarkerArray = [];
+      rubiksMarkerArray.push(markerGroup);
+      rubiksMarkerArray.push(anchorMarkerGroup);
+      
+      rubiksCubeModelCfg.rubiksMarkerArray = rubiksMarkerArray;
+    }
+    
+    function resolveRubiksCube(){
+      if (rubiksCubeModelCfg && !rubiksCubeModelCfg.isResolving && rubiksCubeModelCfg.redundantMarkerHasBeenSeen) {
+        rubiksCubeModelCfg.isResolving = true;
+        let gltf = rubiksCubeModelCfg.gltf;
+        let model = gltf.scene;
+      
+        var animation = gltf.animations[0];
+        var mixer = new THREE.AnimationMixer(model);
+        mixers.push(mixer);
+        var action = mixer.clipAction(animation);
+        action.setLoop(THREE.LoopOnce);
+        action.play();
+        rubiksCubeModelCfg.clipAction = action;      
+      } else {
+        if (rubiksCubeModelCfg.clipAction && !rubiksCubeModelCfg.clipAction.isRunning()){
+          rubiksCubeModelCfg.isResolving = false;
+        }
+      }
+    }
+
+    function addEnergyCapsuleMarker(){
+      let config = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-10.patt",
+        modelPath: "models/gltf/space_capsule_with_energy_cube_3d/scene.gltf",
+        modelName: "Energy capsule",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.01, y: 0.01, z: 0.01},
+        rotation: { x: -Math.PI/2, y: 0, z: 0},
+        runAnimation: true
+      };
+      
+      add3dModel(config);
+    }
+    
+    var solarStationCfg;
+    function addSolarStationMarker(){
+      solarStationCfg = {
+        patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-17.patt",
+        endPatternUrl: "marker-pattern/patt/pattern-Individual_Blocks-18.patt",
+        modelPath: "models/gltf/energy_sphere/scene.gltf",
+        modelName: "Solar station",
+        position: { x: 0, y: 0, z: 0},
+        scale: { x: 0.2, y: 0.2, z: 0.2},
+        runAnimation: true
+      };
+
+      add3dModel(solarStationCfg);
+
+      // build trajectory end markerControls (marker B)
+      var endMarkerGroup = new THREE.Group();
+      scene.add(endMarkerGroup);
+      solarStationCfg.endMarkerGroup = endMarkerGroup;
+      
+      new THREEx.ArMarkerControls(arToolkitContext, endMarkerGroup, {
+        type: 'pattern', patternUrl: solarStationCfg.endPatternUrl
+      });
+    }
+    
+    function addVideoMarker(){
+      // build markerControls
+      videoMarker = new THREE.Group();
+      scene.add(videoMarker);
+      new THREEx.ArMarkerControls(arToolkitContext, videoMarker, {
+        type: 'pattern', patternUrl: "marker-pattern/patt/pattern-Individual_Blocks-5.patt"
+      });
+
+      let geometry = new THREE.PlaneBufferGeometry(2.3,2, 1,1);
+
+      let video = document.getElementById( 'video' );
+      let texture = new THREE.VideoTexture( video );
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.format = THREE.RGBFormat;
+      let material = new THREE.MeshBasicMaterial( { map: texture } );
+      
+      var videoMesh = new THREE.Mesh( geometry, material );
+      videoMesh.name="video";
+      videoMesh.rotation.x = -Math.PI/2;
+      
+      videoMarker.add( videoMesh );
+    }
+    
+    function add3dModel(config){
+      
+      if (config.alternateConfig) {
+        config.useAlternateCfg = useAlternateCfg;
+      }
+      configArray.push(config);
+    
+      // build markerControls
+      var markerGroup = new THREE.Group();
+      scene.add(markerGroup);
+      config.markerGroup = markerGroup;
+      
+      new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+        type: 'pattern', patternUrl: config.patternUrl
+      });
+
+      if (config.alternateConfig && config.useAlternateCfg) {
+        load3dModel(config.alternateConfig, config.markerGroup);
+      } else {
+        load3dModel(config, config.markerGroup);
+      }
+    }
+    
+    function load3dModel(config, markerGroup){
+      // add 3D model to marker
+      var model;
+      console.log(Date.now() + " - start loading model "+config.modelName);
+      threeGLTFLoader.load(
+        config.modelPath, 
+        function (gltf) {
+          config.gltf = gltf;
+          console.log(Date.now() + " - model "+config.modelName+" loaded");
+          model = gltf.scene;
+          model.name = config.modelName;
+
+          model.position.set(config.position.x, config.position.y, config.position.z);
+          if (config.scale){
+            model.scale.set(config.scale.x, config.scale.y, config.scale.z);
+          }
+          
+          if (config.rotation) {
+            model.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
+          }
+          
+          if(config.runAnimation){
+            let animationIxd = 0;
+            
+            if (config.animationNumber){
+              animationIxd = config.animationNumber;
+            }
+            
+            var animation = gltf.animations[animationIxd];
+            var mixer = new THREE.AnimationMixer(model);
+            mixers.push(mixer);
+            var action = mixer.clipAction(animation);
+            action.play();
+          }
+          markerGroup.add(model);
+        });
+    }
+
+    const tempV = new THREE.Vector3();
+    function moveDiv(markerGroup, textPanelDiv){
+      if (markerGroup.visible){
+        textPanelDiv.style.display = 'block';
+        // get the position of the center of the markerGroup
+        markerGroup.getWorldPosition(tempV);
+       
+        // get the normalized screen coordinate of that position
+        // x and y will be in the -1 to +1 range with x = -1 being
+        // on the left and y = -1 being on the bottom
+        tempV.project(camera);
+       
+        // convert the normalized position to CSS coordinates
+        const x = (tempV.x *  .5 + .5) * window.innerWidth;
+        const y = ( (tempV.y-0.55) * -.5 + .25) * window.innerHeight;
+       
+        // move the elem to that position
+        textPanelDiv.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+      } else {
+        textPanelDiv.style.display = 'none';
+      }
+    }
+
+    function updateVideoMarker(){
+      // check if marker is visible
+      if ( videoMarker.visible === true ){
+        document.getElementById('video').play();
+      } else {
+        document.getElementById('video').pause();
+      }
+    }
+    
+    function updateEnergySpherePosition(){
+      if (solarStationCfg.gltf) {
+        if(solarStationCfg.markerGroup.visible && solarStationCfg.endMarkerGroup.visible )
+        {
+          solarStationCfg.gltf.scene.visible = true;
+          let source = solarStationCfg.markerGroup;
+          let target = solarStationCfg.endMarkerGroup;
+          let object = solarStationCfg.gltf.scene;
+        
+          var length = source.position.distanceTo(target.position);
+          //let newX = (length / 2) * Math.sin(totalTime);
+          //object.position.x = newX + (length / 2);
+          
+          
+          var xDist = Math.abs(source.position.x - target.position.x);
+          var yDist = Math.abs(source.position.y - target.position.y);
+          
+          let newX = (xDist / 2) * Math.sin(totalTime);
+          let newY = (yDist / 2) * Math.sin(totalTime);
+          
+          if (source.position.x > target.position.x) {
+            object.position.x = newX - (xDist / 2);
+            if (source.position.y > target.position.y) {
+              console.log("down");
+              object.position.z = (yDist / 2) - newY;
+            } else {
+              object.position.z = newY -(yDist / 2) ;
+            }
+          } else {
+            object.position.x = newX + (xDist / 2);
+            if (source.position.y > target.position.y) {
+              object.position.z = newY + (yDist / 2);
+            } else {
+              object.position.z = -(yDist / 2) - newY;
+            }
+          }          
+        } else {
+          solarStationCfg.gltf.scene.visible = false;
+        }
+      }
+    }
+
+    function updateMovingBeePosition(){
+      if (movingBeeConfig && movingBeeConfig.gltf && movingBeeConfig.markerGroup.visible) {
+        let object = movingBeeConfig.gltf.scene;
+        
+        let newX = 4.0 * Math.sin(totalTime);        
+        if (newX > object.position.x) {
+          // left to right
+          object.rotation.y = Math.PI/2;
+          object.rotation.z = -Math.PI/2;
+        } else {
+          // right to left
+          object.rotation.y = -Math.PI/2;
+          object.rotation.z = Math.PI/2;
+        }
+
+        object.position.x = newX;
+        object.position.z = Math.sin(2.0*totalTime) * 0.5;
+        console.log(object.position);
+      }
+    }
+    
+    function updateRedundantMarkers(markerArray, sceneGroup){
+      let anyMarkerVisible = false;
+      for (let i = 0; i < markerArray.length; i++)
+      {
+        if ( markerArray[i].visible )
+        {
+          anyMarkerVisible = true;
+          markerArray[i].children[0].add( sceneGroup );
+          
+          let p = markerArray[i].children[0].getWorldPosition();
+          let q = markerArray[i].children[0].getWorldQuaternion();
+          let s = markerArray[i].children[0].getWorldScale();
+          let lerpAmount = 0.5;
+          
+          scene.add(sceneGroup);
+          sceneGroup.position.lerp(p, lerpAmount);
+          sceneGroup.quaternion.slerp(q, lerpAmount);
+          sceneGroup.scale.lerp(s, lerpAmount);
+
+          break;
+        }
+      }
+
+      if ( !anyMarkerVisible )
+      {
+        // console.log("No marker currently visible.");
+        scene.remove(sceneGroup);
+      }
+      
+      let baseMarker = markerArray[0];
+      // update relative positions of markers
+      for (let i = 1; i < markerArray.length; i++)
+      {
+        let currentMarker = markerArray[i];
+        let currentGroup  = currentMarker.children[0];
+        if ( baseMarker.visible && currentMarker.visible )
+        {
+          // console.log("updating marker " + i " -> base offset");
+          let relativePosition = currentMarker.worldToLocal( baseMarker.position.clone() );
+          currentGroup.position.copy( relativePosition );
+          
+          let relativeRotation = currentMarker.quaternion.clone().inverse().multiply( baseMarker.quaternion.clone() );
+          currentGroup.quaternion.copy( relativeRotation );
+          rubiksCubeModelCfg.redundantMarkerHasBeenSeen = true;
+        }
+      }
+    }
+    
+    function update(){
+    
+      if (rubiksCubeModelCfg && rubiksCubeModelCfg.rubiksMarkerArray.length > 0) {
+        updateRedundantMarkers(rubiksCubeModelCfg.rubiksMarkerArray, rubiksCubeModelCfg.sceneGroup);
+        
+        moveDiv(rubiksCubeModelCfg.rubiksMarkerArray[1], resolveCubeDiv);
+        if (rubiksCubeModelCfg.rubiksMarkerArray[1].visible){          
+          rubiksCubeModelCfg.redundantMarkerHasBeenSeen = true;
+        }
+        
+        let markerArray = rubiksCubeModelCfg.rubiksMarkerArray;
+        if (markerArray[0].visible && !markerArray[1].visible){
+          resolveRubiksCube();
+          rubiksCubeModelCfg.redundantMarkerHasBeenSeen = false;
+        }
+      }
+      
+      if (ledControlPanelCfg && ledControlPanelDiv && ledControlPanelDiv.style.display === 'none'){
+        //moveDiv(ledControlPanelCfg.markerGroup, ledControlPanelDiv);
+         if (ledControlPanelCfg.markerGroup.visible){
+          ledControlPanelDiv.style.display = 'block';
+         }
+      }
+
+      if (solarStationCfg) {
+        updateEnergySpherePosition();
+      }
+    
+      if (movingBeeConfig) {
+        updateMovingBeePosition();
+      }
+    
+      if (videoMarker){
+        updateVideoMarker();
+      }
+      
+      // update all animated models
+      if (mixers.length > 0) {
+        for (var i = 0; i < mixers.length; i++) {
+            mixers[i].update(deltaTime);
+        }
+      }
+    }
+
+    function render(){
+      renderer.render( scene, camera );
+    }
+
+    function animate(){     
+      requestAnimationFrame(animate);
+      
+      deltaTime = clock.getDelta();
+      totalTime += deltaTime;
+      
+      update();
+
+      if (!arToolkitSource.ready) {
+          return;
+      }
+      arToolkitContext.update( arToolkitSource.domElement )
+
+      render();
+    }
+
+    // load texture
+    function loadTexture(path, object) {
+      loader.load(path, function(texture) {
+        object.traverse(function(child) {
+          if (child instanceof THREE.Mesh) {
+            child.material.map = texture;
+            child.material.needsUpdate = true;
+          }
+        });
+      });
+    }
+    
+    let useAlternateCfg = false;
+
+    function switchUniverse(universe){
+      useAlternateCfg = universe !== "standard";
+      
+      // first init
+      if (configArray.length === 0){
+        initialize();
+        animate();
+      } else {
+        configArray.forEach(config => {
+          if (config.alternateConfig){
+            // toggle configuration flag
+            config.useAlternateCfg = useAlternateCfg;
+          
+            config.markerGroup.children.forEach(child => {
+              config.markerGroup.remove(child);
+            });
+            
+            if (config.useAlternateCfg) {
+              load3dModel(config.alternateConfig, config.markerGroup);
+            } else {
+              load3dModel(config, config.markerGroup);
+            }
+          }
+        });
+      }
+    }
+  </script>
+
+  <!-- include socket.io client side $ -->
+  <script src="js/socket.io.js"></script> 
+  <script>
+    var socket = io(); //load socket.io-client and connect to the bridge (hosting page)
+    
+    socket.on('connect', function (data) {
+      socket.emit('storeClientInfo', { customId:"ar-universe" });
+      
+      getUniverseMode();
+    });
+    
+    socket.on('message', function (message) {
+      console.log("New message : " + message ) ;
+    });
+    
+    socket.on('switchUniverse', function (message) {
+      /*
+      { "universe": "standard" } or { "universe": "virus" }
+      */
+      let universe = "standard";
+      if(message && message.universe){
+        universe = message.universe;
+      }
+        
+      showSnackMessage("switching universe to: "+universe);
+      switchUniverse(universe);   
+    });
+
+    function showSnackMessage(msg) {
+      document.getElementById('snack').style.visibility = 'visible';
+      document.getElementById('msg-snackbar').innerText = msg;
+      
+      setTimeout(function (){
+        document.getElementById('snack').style.visibility = 'hidden';
+      }, 5*1000);
+    }
+    
+    function getUniverseMode(){
+      socket.emit('getStoredValue', { 
+        'valueName': 'universe-mode',
+        'to': 'ar-universe',
+        'ws-reply-event': 'switchUniverse'
+      });
+    }
+  </script>
+
+  <script type="text/javascript">
+    var fullscreen =false;
+    function requestFullScreen(element) {
+      let btn = document.getElementById('fullscreen-btn');
+      if(!fullscreen){
+        // Supports most browsers and their versions.
+        var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+
+        if (requestMethod) { // Native full screen.
+            requestMethod.call(element);
+        } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+            var wscript = new ActiveXObject("WScript.Shell");
+            if (wscript !== null) {
+                wscript.SendKeys("{F11}");
+            }
+        }
+        btn.classList.remove('fullscreen');
+        btn.classList.add('exit-fullscreen');
+      } else {
+        if(document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if(document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if(document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        
+        btn.classList.remove('exit-fullscreen');
+        btn.classList.add('fullscreen');
+      }
+      
+      fullscreen = !fullscreen;
+    }   
+
+    var loadingMsgIdx = 0;
+    var loadingMessages = ["Téléchargement des assets", "Décompression des paquets", "Chargement des ressources", "Optimisation des modèles", "Accès à l'univers"];
+    function updateLoadingMsg(){
+      document.getElementById('loading-msg-label').innerText=loadingMessages[loadingMsgIdx] + "...";
+      loadingMsgIdx++;
+      loadingMsgInterval = setInterval(function(){
+        document.getElementById('loading-msg-label').innerText=loadingMessages[loadingMsgIdx] + "...";
+        loadingMsgIdx = (loadingMsgIdx + 1) % loadingMessages.length;
+      }, 500);
+    }    
+    updateLoadingMsg();
+  </script>
+  
+  <script src="./js/iro.min.js"></script>
+  
+  <script>
+    var colorPicker = new iro.ColorPicker(".colorPicker", {
+      // color picker options
+      // Option guide: https://iro.js.org/guide.html#color-picker-options
+      width: 280,
+      color: "rgb(255, 255, 255)",
+      borderWidth: 1,
+      borderColor: "#fff",
+    });
+    colorPicker.on('input:end', function(color){
+      deactivateBtn(blinkBtn);
+      deactivateBtn(turnBtn);
+      if (!isBtnActive(switchOffBtn)){
+        sendOnCommand(color.rgb);
+      }
+    })
+    
+    var switchOffBtn = document.getElementById("switchOffBtn");
+    var blinkBtn = document.getElementById("blinkBtn");
+    var turnBtn = document.getElementById("turnBtn");
+    
+    function switchOff(){
+      toggleBtn(switchOffBtn);
+      deactivateBtn(turnBtn);
+      deactivateBtn(blinkBtn);
+      
+      if (isBtnActive(switchOffBtn)){
+        sendOnCommand({r: 0, g: 0, b: 0});
+      }
+    }
+    
+    function blink(){
+      toggleBtn(blinkBtn);
+      deactivateBtn(turnBtn);
+      deactivateBtn(switchOffBtn);
+      
+      if (isBtnActive(blinkBtn)){
+        sendBlinkCommand(colorPicker.color.rgb);
+      }
+    }
+    
+    function turn(){
+      toggleBtn(turnBtn);
+      deactivateBtn(blinkBtn);
+      deactivateBtn(switchOffBtn);
+      
+      if (isBtnActive(turnBtn)){
+        sendTurnCommand(colorPicker.color.rgb);
+      }
+    }
+    
+    function closeLedControlPanel(){
+      if (ledControlPanelDiv && ledControlPanelDiv.style && ledControlPanelDiv.style.display !== 'none'){
+        ledControlPanelDiv.style.display = 'none';
+      }
+    }
+    
+    function toggleBtn(btn){
+      if (btn.classList.contains('active')){
+        deactivateBtn(btn);
+      } else {
+        activateBtn(btn);
+      }
+    }
+    
+    function isBtnActive(btn){
+      return btn.classList.contains('active');
+    }
+    
+    function activateBtn(btn){
+      btn.classList.add('active');
+    }
+    
+    function deactivateBtn(btn){
+      btn.classList.remove('active');
+    }
+    
+    function sendOnCommand(rgbObj){
+      let msg = { "action": "on", "color" : { "r": rgbObj.r, "g": rgbObj.g, "b": rgbObj.b}};
+      sendEventToSmartLight(msg);
+    }
+
+    function sendBlinkCommand(rgbObj){
+      let msg = { "action": "blink", "color" : { "r": rgbObj.r, "g": rgbObj.g, "b": rgbObj.b}};
+      sendEventToSmartLight(msg);
+    }
+
+    function sendTurnCommand(rgbObj){
+      let msg = { "action": "turn", "color" : { "r": rgbObj.r, "g": rgbObj.g, "b": rgbObj.b}};
+      sendEventToSmartLight(msg);
+    }
+    
+    function sendEventToSmartLight(msg){
+      socket.send(JSON.stringify(
+          {
+              to: 'smartLight',
+              event: 'action',
+              message: JSON.stringify(msg)
+          }
+        )
+      );
+    }
+  </script>
+</body>
+</html>

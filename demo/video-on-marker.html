@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<head>
+  <base href="/threejs/">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<title>What a video...</title>
+  
+  <link href="css/common.css" rel="stylesheet">
+  <script src="js/common.js"></script>
+  
+	<!-- include three.js library -->
+	<script src='js/three.js'></script>
+	<!-- include jsartookit -->
+	<script src="jsartoolkit5/artoolkit.min.js"></script>
+	<script src="jsartoolkit5/artoolkit.api.js"></script>
+	<!-- include threex.artoolkit -->
+	<script src="threex/threex-artoolkitsource.js"></script>
+	<script src="threex/threex-artoolkitcontext.js"></script>
+	<script src="threex/threex-arbasecontrols.js"></script>
+	<script src="threex/threex-armarkercontrols.js"></script>
+  
+</head>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+
+<div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+  <div id="fullscreen-btn" onclick="requestFullScreen(document.body)" class="fullscreen"></div>
+</div>
+
+<video id="video" autoplay loop crossOrigin="anonymous" webkit-playsinline style="display:none">
+	<source src="video/flowers.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+</video>
+		
+<script>
+
+var scene, camera, renderer, clock, deltaTime, totalTime;
+
+var arToolkitSource, arToolkitContext;
+
+var markerGroup;
+
+var mesh;
+
+initialize();
+animate();
+
+function initialize()
+{
+	scene = new THREE.Scene();
+
+	let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.5 );
+	scene.add( ambientLight );
+				
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	renderer = new THREE.WebGLRenderer({
+		antialias : true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	renderer.setSize( 640, 480 );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	clock = new THREE.Clock();
+	deltaTime = 0;
+	totalTime = 0;
+	
+	////////////////////////////////////////////////////////////
+	// setup arToolkitSource
+	////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		sourceType : 'webcam',
+	});
+
+	function onResize()
+	{
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if ( arToolkitContext.arController !== null )
+		{
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	});
+	
+	// handle resize event
+	window.addEventListener('resize', function(){
+		onResize()
+	});
+	
+	////////////////////////////////////////////////////////////
+	// setup arToolkitContext
+	////////////////////////////////////////////////////////////	
+
+	// create atToolkitContext
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: 'data/camera_para.dat',
+		detectionMode: "mono_and_matrix",
+    matrixCodeType: "3x3_PARITY65",
+	});
+	
+	// copy projection matrix to camera when initialization complete
+	arToolkitContext.init( function onCompleted(){
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	});
+
+	////////////////////////////////////////////////////////////
+	// setup markerRoots
+	////////////////////////////////////////////////////////////
+
+	// build markerControls
+	markerGroup = new THREE.Group();
+	scene.add(markerGroup);
+	let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+    type: 'barcode', barcodeValue: 1,
+  });
+
+	let geometry = new THREE.PlaneBufferGeometry(2,2, 4,4);
+
+	let video = document.getElementById( 'video' );
+	let texture = new THREE.VideoTexture( video );
+	texture.minFilter = THREE.LinearFilter;
+	texture.magFilter = THREE.LinearFilter;
+	texture.format = THREE.RGBFormat;
+	let material = new THREE.MeshBasicMaterial( { map: texture } );
+	
+	mesh = new THREE.Mesh( geometry, material );
+	mesh.rotation.x = -Math.PI/2;
+	
+	markerGroup.add( mesh );
+}
+
+
+function update()
+{
+  // check if marker is visible
+  if ( markerGroup.visible === true ){
+    document.getElementById('video').play();
+  } else {
+    document.getElementById('video').pause();
+  }
+
+	// update artoolkit on every frame
+	if ( arToolkitSource.ready !== false )
+		arToolkitContext.update( arToolkitSource.domElement );
+}
+
+
+function render()
+{
+	renderer.render( scene, camera );
+}
+
+
+function animate()
+{
+	requestAnimationFrame(animate);
+	deltaTime = clock.getDelta();
+	totalTime += deltaTime;
+	update();
+	render();
+}
+
+</script>
+
+</body>
+</html>

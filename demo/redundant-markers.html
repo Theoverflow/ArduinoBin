@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<head>
+  <base href="/threejs/">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<title>Redundant markers...</title>
+  
+  <link href="css/common.css" rel="stylesheet">
+  <script src="js/common.js"></script>
+  
+	<!-- include three.js library -->
+	<script src='js/three.js'></script>
+  <script src='js/GLTFLoader.js'></script>
+	<!-- include jsartookit -->
+	<script src="jsartoolkit5/artoolkit.min.js"></script>
+	<script src="jsartoolkit5/artoolkit.api.js"></script>
+	<!-- include threex.artoolkit -->
+	<script src="threex/threex-artoolkitsource.js"></script>
+	<script src="threex/threex-artoolkitcontext.js"></script>
+	<script src="threex/threex-arbasecontrols.js"></script>
+	<script src="threex/threex-armarkercontrols.js"></script>
+</head>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+
+<div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+  <div id="fullscreen-btn" onclick="requestFullScreen(document.body)" class="fullscreen"></div>
+</div>
+
+  <script>
+
+    var scene, camera, renderer, clock, deltaTime, totalTime;
+
+    var arToolkitSource, arToolkitContext;
+
+    var markerGroup;
+    
+    var sphereGeometry = new THREE.SphereGeometry( 0.4, 32, 32 );
+    var hexaGeometry = new THREE.CircleGeometry( 0.5, 6 );
+    var emptyCircleGeometry = new THREE.CircleGeometry( 0.4, 32 );
+    
+    var redMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5 } );
+    var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff, opacity: 0.5 } );
+    var greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, opacity: 0.5 } );
+    var yellowMaterial = new THREE.MeshBasicMaterial( { color: 0xffff00, opacity: 0.5 } );
+    var lightGreyMaterial = new THREE.MeshBasicMaterial( { color: 0xcccccc, opacity: 0.5 } );
+
+    var threeGLTFLoader = new THREE.GLTFLoader();
+    var mixers = [];
+
+    var lockElt = {
+      marker: undefined,
+      states: {
+        firstSphere: undefined,
+        secondSphere: undefined,
+        thirdSphere: undefined,
+        fourthSphere: undefined,
+      } 
+    }
+
+    initialize();
+    animate();
+
+    function initialize()
+    {
+      scene = new THREE.Scene();
+
+      let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.5 );
+      scene.add( ambientLight );
+            
+      camera = new THREE.Camera();
+      scene.add(camera);
+
+      renderer = new THREE.WebGLRenderer({
+        antialias : true,
+        alpha: true
+      });
+      renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+      renderer.setSize( 640, 480 );
+      renderer.domElement.style.position = 'absolute'
+      renderer.domElement.style.top = '0px'
+      renderer.domElement.style.left = '0px'
+      document.body.appendChild( renderer.domElement );
+
+      clock = new THREE.Clock();
+      deltaTime = 0;
+      totalTime = 0;
+      
+      ////////////////////////////////////////////////////////////
+      // setup arToolkitSource
+      ////////////////////////////////////////////////////////////
+
+      arToolkitSource = new THREEx.ArToolkitSource({
+        sourceType : 'webcam',
+      });
+
+      function onResize()
+      {
+        arToolkitSource.onResize()	
+        arToolkitSource.copySizeTo(renderer.domElement)	
+        if ( arToolkitContext.arController !== null )
+        {
+          arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+        }	
+      }
+
+      arToolkitSource.init(function onReady(){
+        onResize()
+      });
+      
+      // handle resize event
+      window.addEventListener('resize', function(){
+        onResize()
+      });
+      
+      ////////////////////////////////////////////////////////////
+      // setup arToolkitContext
+      ////////////////////////////////////////////////////////////	
+
+      // create atToolkitContext
+      arToolkitContext = new THREEx.ArToolkitContext({
+        cameraParametersUrl: 'data/camera_para.dat',
+        detectionMode: "mono_and_matrix",
+        matrixCodeType: "3x3_PARITY65",
+      });
+      
+      // copy projection matrix to camera when initialization complete
+      arToolkitContext.init( function onCompleted(){
+        camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+      });
+
+      ////////////////////////////////////////////////////////////
+      // setup markerRoots
+      ////////////////////////////////////////////////////////////
+      addLock();
+
+
+      firstNeuronMarkerArray = [];
+      firstNeuronSceneGroup = new THREE.Group();
+      const neuron1Config = {
+        barcodeValue: 1,
+        anchorValue: 2,
+        offset: { x: 0, y: 0.0, z: 0.0 },
+        neuron: { name: 'l1-n0', x:  0.0, y:  0.0, z:  0.0 },
+        red:    { name: 'l1-n1', x: -0.9, y: -0.5, z:  0.0 },
+        blue:   { name: 'l1-n2', x: -0.9, y:  0.5, z:  0.0 },
+        green:  { name: 'l1-n3', x:  0.0, y:  1.0, z:  0.0 },
+        yellow: { name: 'l1-n4', x:  0.9, y:  0.5, z:  0.0 }
+      };
+
+      setupNeuronArea(firstNeuronMarkerArray, firstNeuronSceneGroup, neuron1Config);
+    }
+
+    function addLock(){
+      lockSceneGroup = new THREE.Group();
+      lockMarkerArray = [];
+
+      // add lock marker
+      let marker = new THREE.Group();
+      marker.name = 'lock-marker';
+      lockElt.marker = marker;
+      scene.add(marker);
+      lockMarkerArray.push(marker);
+      
+      new THREEx.ArMarkerControls(arToolkitContext, marker, {
+        type: 'barcode', barcodeValue: 2,
+      });
+      
+      let markerGroup = new THREE.Group();
+      marker.add(markerGroup);
+      
+      // Prepare empty circle with black border geometry
+      var radius   = 0.4,
+      segments = 32,
+      material = new THREE.LineBasicMaterial( { color: 0x000000 } ),
+      geometry = emptyCircleGeometry;
+      // Remove center vertex
+      geometry.vertices.shift();
+
+      lockElt.states.firstSphere = new THREE.LineLoop( geometry, material ) ;
+      lockElt.states.firstSphere.position.x = -0.9;
+      lockElt.states.firstSphere.position.z = 3;
+      lockElt.states.firstSphere.position.y = 0;
+      lockElt.states.firstSphere.name = 's1-n1';
+      lockElt.states.firstSphere.rotation.x = -Math.PI/2;
+      markerGroup.add( lockElt.states.firstSphere ); 
+      
+      lockElt.states.secondSphere = new THREE.LineLoop( geometry, material ) ;
+      lockElt.states.secondSphere.position.x = -0.9;
+      lockElt.states.secondSphere.position.z = 1;
+      lockElt.states.secondSphere.position.y = 0;
+      lockElt.states.secondSphere.name = 's1-n2';
+      lockElt.states.secondSphere.rotation.x = -Math.PI/2;
+      markerGroup.add( lockElt.states.secondSphere );
+      
+      lockElt.states.thirdSphere = new THREE.LineLoop( geometry, material ) ;
+      lockElt.states.thirdSphere.position.x = -0.9;
+      lockElt.states.thirdSphere.position.z = -1;
+      lockElt.states.thirdSphere.position.y = 0;
+      lockElt.states.thirdSphere.name = 's1-n3';
+      lockElt.states.thirdSphere.rotation.x = -Math.PI/2;
+      markerGroup.add( lockElt.states.thirdSphere );
+      
+      lockElt.states.fourthSphere = new THREE.LineLoop( geometry, material ) ;
+      lockElt.states.fourthSphere.position.x = -0.9;
+      lockElt.states.fourthSphere.position.z = -3;
+      lockElt.states.fourthSphere.position.y = 0;
+      lockElt.states.fourthSphere.name = 's1-n4';
+      lockElt.states.fourthSphere.rotation.x = -Math.PI/2;
+      markerGroup.add( lockElt.states.fourthSphere );
+
+      // add lock 3D model
+      threeGLTFLoader.load(
+        "models/gltf/lock/lock.gltf",
+        function (gltf) {
+          model = gltf.scene;
+          model.name = 'lock-model';          
+          model.scale.set(0.003,0.003,0.003);
+          model.rotation.x = -Math.PI/2;
+  
+          lockAnimation = gltf.animations[0];
+          lockMixer = new THREE.AnimationMixer(model);
+          
+          mixers.push(lockMixer);
+          
+          markerGroup.add(model);
+      });
+      
+      lockMarkerArray[0].children[0].add( lockSceneGroup );
+    }
+
+    function setupNeuronArea(neuronMarkerArray, sceneGroup, neuronConfig){
+      // add neuron marker
+      let marker = new THREE.Group();
+      marker.name=neuronConfig.barcodeValue;
+      scene.add(marker);
+      neuronMarkerArray.push(marker);
+      
+      new THREEx.ArMarkerControls(arToolkitContext, marker, {
+        type: 'barcode', barcodeValue: neuronConfig.barcodeValue,
+      });
+      
+      let markerGroup = new THREE.Group();
+      marker.add(markerGroup);
+      
+      addNeuronWithoutMarker(neuronConfig, sceneGroup);
+      
+      // add anchor marker (used when main marker is hidden)
+      let anchorMarker = new THREE.Group();
+      scene.add(anchorMarker);
+      
+      new THREEx.ArMarkerControls(arToolkitContext, anchorMarker, {
+        type: 'barcode', barcodeValue: neuronConfig.anchorValue,
+      });
+      
+      let anchorMarkerGroup = new THREE.Group();
+      anchorMarker.add(anchorMarkerGroup);
+      
+      neuronMarkerArray.push(anchorMarker);
+      neuronMarkerArray[0].children[0].add( sceneGroup );
+    }
+
+    function addNeuronWithoutMarker(config, neuronSceneGroup){
+      let group = new THREE.Group();
+      group.position.x = config.offset.x;
+      group.position.y = config.offset.y;
+      group.position.z = config.offset.z;
+        
+      let sphere = new THREE.Mesh( sphereGeometry, lightGreyMaterial );
+      sphere.name = config.neuron.name;
+      sphere.position.x = config.neuron.x;
+      sphere.position.y = config.neuron.y;
+      sphere.position.z = config.neuron.z;
+      group.add( sphere );
+      
+      // add areas around neuron
+      let circle = new THREE.Mesh( hexaGeometry, redMaterial );
+      circle.name = config.red.name;
+      circle.position.x = config.red.x;
+      circle.position.z = config.red.y;
+      circle.position.y = config.red.z;
+      circle.rotation.x = -Math.PI/2;
+      group.add( circle );
+      
+      circle = new THREE.Mesh( hexaGeometry, blueMaterial );
+      circle.name = config.blue.name;
+      circle.position.x = config.blue.x;
+      circle.position.z = config.blue.y;
+      circle.position.y = config.blue.z;
+      circle.rotation.x = -Math.PI/2;
+      group.add( circle );
+      
+      circle = new THREE.Mesh( hexaGeometry, greenMaterial );
+      circle.name = config.green.name;
+      circle.position.x = config.green.x;
+      circle.position.z = config.green.y;
+      circle.position.y = config.green.z;
+      circle.rotation.x = -Math.PI/2;
+      group.add( circle );
+      
+      circle = new THREE.Mesh( hexaGeometry, yellowMaterial );
+      circle.name = config.yellow.name;
+      circle.position.x = config.yellow.x;
+      circle.position.z = config.yellow.y;
+      circle.position.y = config.yellow.z;
+      circle.rotation.x = -Math.PI/2;
+      group.add( circle );
+      
+      // draw lines to lock's sphere
+      var points = [];
+      const target = lockElt.states.firstSphere;
+      const source = sphere;
+
+      if(source && target){
+        var material = new THREE.LineDashedMaterial( {
+          dashSize: 1,
+          gapSize: 1,
+        } );
+
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));        
+        var lineMesh = new THREE.Line(geometry, material);
+        lineMesh.name = config.neuron.name+'-first-line';
+        lineMesh.visible = false;
+        scene.add(lineMesh);
+        
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineMesh = new THREE.Line(geometry, material);
+        lineMesh.name = config.neuron.name+'-second-line';
+        lineMesh.visible = false;
+        scene.add(lineMesh);
+        
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineMesh = new THREE.Line(geometry, material);
+        lineMesh.name = config.neuron.name+'-third-line';
+        lineMesh.visible = false;
+        scene.add(lineMesh);
+        
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineMesh = new THREE.Line(geometry, material);
+        lineMesh.name = config.neuron.name+'-fourth-line';
+        lineMesh.visible = false;
+        scene.add(lineMesh);
+      }
+      neuronSceneGroup.add(group);
+    }
+
+    var openingLock = false;
+
+    function openLock(){
+      if(!openingLock){
+        console.log("opening lock");
+        openingLock = true;
+        var action = lockMixer.clipAction(lockAnimation);
+        action.play();      
+        // pause animation after 3.8 sec (to avoid lock to be closed again)
+        setTimeout(function(){ action.paused = true; openingLock = false;}, 3800);
+      }
+    };
+
+    function updateLinePosition(source, target, lineMesh){
+      if(target.visible){
+        lineMesh.visible = true;
+          
+        var geometry = lineMesh.geometry;
+        geometry.vertices[0].copy(source.position);
+        geometry.vertices[1].copy(target.getWorldPosition());
+        geometry.verticesNeedUpdate = true;
+
+        geometry.computeBoundingSphere();
+        geometry.computeLineDistances();
+
+        var length = source.position.distanceTo(target.position);
+        lineMesh.material.scale = length * 10;
+        lineMesh.material.needsUpdate = true;
+      } else {
+        lineMesh.visible = false;
+      }
+    }
+    
+    function hideNeuronLines(neuronName){
+      let lineMesh = scene.getObjectByName(neuronName+"-first-line");
+      lineMesh.visible = false;
+      
+      lineMesh = scene.getObjectByName(neuronName+"-second-line");
+      lineMesh.visible = false;
+      
+      lineMesh = scene.getObjectByName(neuronName+"-third-line");
+      lineMesh.visible = false;
+      
+      lineMesh = scene.getObjectByName(neuronName+"-fourth-line");
+      lineMesh.visible = false;
+    }
+    
+    function updateNeuronMarker(markerArray, sceneGroup){
+      let anyMarkerVisible = false;
+      for (let i = 0; i < markerArray.length; i++)
+      {
+        if ( markerArray[i].visible )
+        {
+          anyMarkerVisible = true;
+          markerArray[i].children[0].add( sceneGroup );
+          
+          let p = markerArray[i].children[0].getWorldPosition();
+          let q = markerArray[i].children[0].getWorldQuaternion();
+          let s = markerArray[i].children[0].getWorldScale();
+          let lerpAmount = 0.5;
+          
+          scene.add(sceneGroup);
+          sceneGroup.position.lerp(p, lerpAmount);
+          sceneGroup.quaternion.slerp(q, lerpAmount);
+          sceneGroup.scale.lerp(s, lerpAmount);
+
+          break;
+        }
+      }
+
+      if ( !anyMarkerVisible )
+      {
+        // console.log("No marker currently visible.");
+        scene.remove(sceneGroup);
+      }
+      
+      let baseMarker = markerArray[0];
+      // update relative positions of markers
+      for (let i = 1; i < markerArray.length; i++)
+      {
+        let currentMarker = markerArray[i];
+        let currentGroup  = currentMarker.children[0];
+        if ( baseMarker.visible && currentMarker.visible )
+        {
+          // console.log("updating marker " + i " -> base offset");
+          let relativePosition = currentMarker.worldToLocal( baseMarker.position.clone() );
+          currentGroup.position.copy( relativePosition );
+          
+          let relativeRotation = currentMarker.quaternion.clone().inverse().multiply( baseMarker.quaternion.clone() );
+          currentGroup.quaternion.copy( relativeRotation );
+        }
+      }
+
+      if (baseMarker && baseMarker.name !== 'lock-marker' && baseMarker.name !== 'background-marker') {
+        // update lines between neuron and state spheres
+        var group = sceneGroup.children[0];
+        if (group) {
+          let neuronName = group.children[0].name
+          if(anyMarkerVisible) {   
+            if (baseMarker.visible && lockElt.marker.visible) {
+              let lineMesh = scene.getObjectByName(neuronName+"-first-line");
+              let target = scene.getObjectByName('s1-n1');
+              updateLinePosition(baseMarker, target, lineMesh);
+              
+              lineMesh = scene.getObjectByName(neuronName+"-second-line");
+              target = scene.getObjectByName('s1-n2');
+              updateLinePosition(baseMarker, target, lineMesh);
+              
+              lineMesh = scene.getObjectByName(neuronName+"-third-line");
+              target = scene.getObjectByName('s1-n3');
+              updateLinePosition(baseMarker, target, lineMesh);
+              
+              lineMesh = scene.getObjectByName(neuronName+"-fourth-line");
+              target = scene.getObjectByName('s1-n4');
+              updateLinePosition(baseMarker, target, lineMesh);          
+            } else {
+              hideNeuronLines(neuronName);
+            }
+          } else {
+            hideNeuronLines(neuronName);
+          }
+        } 
+      }
+    }
+
+    function update()
+    {
+      updateNeuronMarker(firstNeuronMarkerArray,  firstNeuronSceneGroup);
+    
+      if (!firstNeuronMarkerArray[0].visible && lockElt.marker.visible){
+        openLock();
+      }
+    
+      if (mixers.length > 0) {
+        for (var i = 0; i < mixers.length; i++) {
+            mixers[i].update(clock.getDelta());
+        }
+      }
+    }
+
+
+    function render()
+    {
+      renderer.render( scene, camera );
+    }
+    
+    function animate(){     
+      requestAnimationFrame(animate);
+      update();
+
+      if (!arToolkitSource.ready) {
+          return;
+      }
+      arToolkitContext.update( arToolkitSource.domElement )
+
+      render();
+    }
+
+</script>
+
+</body>
+</html>

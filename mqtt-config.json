@@ -1,0 +1,62 @@
+{
+  "broker": {
+    "protocol": "mqtt",
+    "host": "localhost",
+    "port": "1883",
+    "useSSL": false
+  },
+  "publishers": [{
+      "ws-to": "any",
+      "ws-event": "hololensStatus",
+      "topic": "/hololens/status"
+    }, {
+      "ws-to": "3d-printer",
+      "ws-event": "printerAction",
+      "topic": "/printers/3d/action"
+    }, {
+      "ws-to": "mastermind",
+      "ws-event": "mastermindStart",
+      "topic": "/mastermind/action"
+    }, {
+      "ws-to": "mastermind",
+      "ws-event": "mastermindValidation",
+      "topic": "/mastermind/action"
+    }, {
+      "ws-to": "smartLight",
+      "ws-event": "action",
+      "topic": "/lights/smart/1/action"
+    }
+  ],
+  "subscribers": [{
+      "topic": "/hololens/action",
+      "ws-to": "mr-hololens",
+      "ws-event": "hololensAction"
+    },
+    {
+      "valueName": "mastermind-status",
+      "topic": "/mastermind/status",
+      "ws-to": "mastermind-webxr-page",
+      "ws-event": "mastermindStatus"
+    },
+    {
+      "topic": "/mastermind/validation/status",
+      "ws-to": "mastermind-webxr-page",
+      "ws-event": "mastermindValidationStatus"
+    },
+    {
+      "topic": "/mastermind/sensors/status",
+      "ws-to": "mastermind-webxr-page",
+      "ws-event": "mastermindSensorsStatus"
+    },
+    {
+      "topic": "/bridge/action",
+      "ws-to": "bridge-test-page",
+      "ws-event": "bridgeTestMsg"
+    }, {
+      "valueName": "universe-mode",
+      "topic": "/general/universe/status",
+      "ws-to": "ar-universe",
+      "ws-event": "switchUniverse"
+    }
+  ]
+}

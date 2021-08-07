@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+  <head>
+    <base href="/threejs/">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Machine repair demo</title>
+
+    <link href="css/common.css" rel="stylesheet">
+    <script src="js/common.js"></script>
+
+    <!--include three.js library-->
+    <script src='js/three.js'></script>
+    <!--include jsartookit-->
+    <script src="jsartoolkit5/artoolkit.min.js"></script>
+    <script src="jsartoolkit5/artoolkit.api.js"></script>
+    <!--include threex.artoolkit-->
+    <script src="threex/threex-artoolkitsource.js"></script>
+    <script src="threex/threex-artoolkitcontext.js"></script>
+    <script src="threex/threex-arbasecontrols.js"></script>
+    <script src="threex/threex-armarkercontrols.js"></script>
+ </head>
+
+  <body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+    <style>
+      @font-face {
+       font-family: "Lato";
+       src: url("./fonts/Lato/Lato-Regular.ttf") format("truetype");
+      }
+    
+      .text-panel {
+        background-color: rgba(255,255,255, 0.5);
+        width: fit-content;
+        border: 2px rgba(255,255,255, 0.5) solid;
+        border-radius: 8px;
+        font-family: "Lato";
+        font-size: 18px;
+        padding: 4px;
+        z-index: 1;
+        position: fixed;
+      } 
+      
+      #iframe {
+        width: 100%;
+        height: 100vh;
+      }
+      
+      #hide-iframe-btn{
+        background-color: rgba(255,255,255, 0.8);
+        padding: 4px;
+        font-family: "Lato";
+        border: 4px black solid;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      
+      .inventory-panel{
+        background-color: #323232cc;
+        width: 80%;
+        margin: auto;
+        width: fit-content;
+        border: 2px rgba(255,255,255, 0.5) solid;
+        /*border-radius: 8px;*/
+        font-family: "Lato";
+        font-size: 18px;
+        color: whitesmoke;
+        padding: 4px;
+        z-index: 1;
+        position: relative;
+        margin-top: 10px;
+      }
+      
+      .inventory-list{
+        min-height: 12vh;
+        max-height: 80%;
+        width: fit-content;
+        overflow: auto;
+        position: relative;
+        display: ms-flex;
+        display: -webkit-flex;
+        display: flex;     
+        flex-wrap: wrap;        
+        padding: 10px;
+      }
+      
+      .inventory-list > div {
+        flex-grow: 1;
+        width: 50%;
+      }
+      
+      .item-qty {
+        text-align: right;
+      }
+      
+      .not-available {
+        color: #D32F2F;
+      }
+    </style>   
+    
+    <div id="iframe-wrapper" style="display: none">
+      <div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+        <div id="hide-iframe-btn" onclick="hideIframe()" >Back to AR</div>
+      </div>
+      <iframe id="iframe" >
+      </iframe>
+    </div>
+    
+    <div id="html-wrapper">
+      <div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+        <div id="fullscreen-btn" onclick="requestFullScreen(document.body)" class="fullscreen"></div>
+      </div>
+      
+      <div id="procedure-text-panel" class="text-panel">
+        <div>Accéder à la procédure de maintenance</div>
+        <div>
+          <button onclick="openProcedure();" class="btn">Ouvrir</button>
+        </div>      
+      </div>
+      
+      <div id="assign-box-text-panel" class="text-panel">
+        <div id="box-status">Boite disponible</div>
+        <div id="assign-btn-wrapper">
+          <button onclick="assignBox();" class="btn">Assigner</button>
+        </div>
+
+        <div id="back-btn-wrapper" style="display: none">
+          <button onclick="backToProcedure();" class="btn">Retour à la procédure</button>
+        </div>          
+      </div>
+      
+      <div id="snack" class="snack" style="visibility: hidden">
+        <div role="alert" class="snack__wrapper">
+          <div class="snack__content" id="msg-snackbar"></div>
+        </div>
+      </div>
+
+      <div id="inventory-panel" class="inventory-panel">
+        <div style="text-transform: uppercase">Armoire n°1234</div>
+        <div>Inventaire</div>
+        <div id="inventory-list" class="inventory-list"></div>
+      </div>      
+    </div>
+
+    <script>
+      var scene, camera, renderer, clock, deltaTime, totalTime;
+
+      var raycaster, mouse={
+          x: 0,
+          y: 0
+      };
+      var selectedObject=null;
+
+      var arToolkitSource, arToolkitContext;
+
+      var markerGroup1, markerGroup2;
+
+      var interactiveObjs=[];
+      
+      var startProcedureTextPanelDiv = document.getElementById('procedure-text-panel');
+      var assignBoxTextPanelDiv = document.getElementById('assign-box-text-panel');
+      var inventoryPanelDiv = document.getElementById('inventory-panel');
+
+      initialize();
+      animate();
+
+      function initialize() {
+        scene=new THREE.Scene();
+
+        let ambientLight=new THREE.AmbientLight(0xcccccc, 0.5);
+        scene.add(ambientLight);
+
+        renderer=new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true
+        });
+        renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+        renderer.setSize( window.innerWidth, window.innerHeight ); 
+        //this is to get the correct pixel detail on portable devices
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.domElement.style.position='absolute'
+        renderer.domElement.style.top='0px'
+        renderer.domElement.style.left='0px'
+        document.body.appendChild(renderer.domElement);
+
+        camera=new THREE.PerspectiveCamera(
+          50,                                           //FOV
+          window.innerWidth / window.innerHeight,       //aspect
+          1,                                            //near clipping plane
+          1000                                          //far clipping plane
+        );
+        camera.lookAt(scene.position);        
+        
+        clock=new THREE.Clock();
+        deltaTime=0;
+        totalTime=0;
+
+        ////////////////////////////////////////////////////////////
+        // setup arToolkitSource
+        ////////////////////////////////////////////////////////////
+
+        arToolkitSource=new THREEx.ArToolkitSource({
+            sourceType: 'webcam',
+        });
+
+        function onResize() {
+            arToolkitSource.onResizeElement()
+            arToolkitSource.copyElementSizeTo(renderer.domElement)
+            if (arToolkitContext.arController !== null) {
+                arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+            }
+        }
+
+        arToolkitSource.init(function onReady() {
+            onResize()
+        });
+
+        // handle resize event
+        window.addEventListener('resize', function () {
+            onResize()
+        });
+
+        ////////////////////////////////////////////////////////////
+        // setup arToolkitContext
+        ////////////////////////////////////////////////////////////
+
+        // create atToolkitContext
+        arToolkitContext=new THREEx.ArToolkitContext({
+                cameraParametersUrl: 'data/camera_para.dat',
+                detectionMode: "mono_and_matrix",
+                matrixCodeType: "3x3_PARITY65",
+            });
+
+        // copy projection matrix to camera when initialization complete
+        arToolkitContext.init(function onCompleted() {
+            camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+        });
+
+        ////////////////////////////////////////////////////////////
+        // setup markerRoots
+        ////////////////////////////////////////////////////////////
+
+        // build markerControls
+        markerGroup1=new THREE.Group();
+        scene.add(markerGroup1);
+        new THREEx.ArMarkerControls(arToolkitContext, markerGroup1, {
+                type: 'barcode',
+                barcodeValue: 1,
+            });
+            
+        markerGroup2=new THREE.Group();
+        scene.add(markerGroup2);
+        new THREEx.ArMarkerControls(arToolkitContext, markerGroup2, {
+                type: 'barcode',
+                barcodeValue: 2,
+            });
+            
+        markerGroup3=new THREE.Group();
+        scene.add(markerGroup3);
+        new THREEx.ArMarkerControls(arToolkitContext, markerGroup3, {
+                type: 'barcode',
+                barcodeValue: 3,
+            });
+      }
+
+      function update() {
+        // update artoolkit on every frame
+        if (arToolkitSource.ready !== false)
+          arToolkitContext.update(arToolkitSource.domElement);
+      }
+      
+      const tempV = new THREE.Vector3();
+      function moveDiv(markerGroup, textPanelDiv){
+        if (markerGroup.visible){
+          textPanelDiv.style.display = 'block';
+          // get the position of the center of the markerGroup
+          markerGroup.getWorldPosition(tempV);
+         
+          // get the normalized screen coordinate of that position
+          // x and y will be in the -1 to +1 range with x = -1 being
+          // on the left and y = -1 being on the bottom
+          tempV.project(camera);
+         
+          // convert the normalized position to CSS coordinates
+          const x = (tempV.x *  .5 + .5) * window.innerWidth;
+          const y = ( (tempV.y-0.55) * -.5 + .5) * window.innerHeight;
+         
+          // move the elem to that position
+          textPanelDiv.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+        } else {
+          textPanelDiv.style.display = 'none';
+        }
+      }
+      
+      function render() {
+        moveDiv(markerGroup1, startProcedureTextPanelDiv);
+        moveDiv(markerGroup2, assignBoxTextPanelDiv);
+        moveDiv(markerGroup3, inventoryPanelDiv);
+        
+        renderer.render(scene, camera);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        deltaTime=clock.getDelta();
+        totalTime += deltaTime;
+        update();
+        render();
+      }
+            
+      function openInIframe(src){
+        document.getElementsByTagName('canvas')[0].style.display = 'none';
+        document.getElementsByTagName('video')[0].style.display = 'none';
+        document.getElementById('html-wrapper').style.display = 'none';
+        
+        document.getElementById('iframe').onload = function() { document.getElementById('iframe').style.visibility = 'visible'; };
+        document.getElementById('iframe').src = src;
+        
+        document.getElementById('iframe-wrapper').style.display = 'block';
+        document.getElementById('iframe').style.visibility = 'hidden';
+      }
+      
+      function openProcedure(){
+        openInIframe("../../MachineRepair-demo/index.html?probleme_detecte_sur_la_machine_");
+      }
+      
+      function backToProcedure(){
+        openInIframe("../../MachineRepair-demo/index.html?vue_diota");
+      }
+      
+      function hideIframe(){
+        document.getElementsByTagName('canvas')[0].style.display = 'block';
+        document.getElementsByTagName('video')[0].style.display = 'block';
+        document.getElementById('html-wrapper').style.display = 'block';
+        document.getElementById('iframe-wrapper').style.display = 'none';
+      }
+      
+      function assignBox(){
+        showSnackMessage("Boite attribuée à l'utilisateur 'user1' pour l'intervention sur 'Robot Niryo'");
+        document.getElementById("assign-btn-wrapper").style.display="none";
+        document.getElementById("back-btn-wrapper").style.display="block";
+        document.getElementById("box-status").innerText="Boite attribuée à 'user1' pour l'intervention sur 'Robot Niryo'";
+      }
+      
+      function showSnackMessage(msg) {
+        document.getElementById('snack').style.visibility = 'visible';
+        document.getElementById('msg-snackbar').innerText = msg;
+        
+        setTimeout(function (){
+          document.getElementById('snack').style.visibility = 'hidden';
+        }, 5*1000);
+      }
+    </script>
+    
+    <!-- Start - Include MQTT scripts -->
+      <script type="text/javascript" src="../../MachineRepair-demo/extra-js/mqtt/mqtt-config.js" charset="UTF-8"></script>
+      <script type="text/javascript" src="../../MachineRepair-demo/extra-js/mqtt/mqttws31.min.js" charset="UTF-8"></script>
+      <script>
+        var inventoryTopic = '/drawer/inventory';
+        function connectMqttClient(){      
+          arMqttClient = new Paho.MQTT.Client(mqttConfig.host, parseInt(mqttConfig.port), 'vf-ux-iot-'+Date.now());
+          const options = {
+            timeout: 3,
+            onSuccess: onMqttConnect,
+            useSSL: mqttConfig.useSSL,
+          }
+
+          // set callback handlers
+          arMqttClient.onConnectionLost = onMqttConnectionLost;
+          arMqttClient.onMessageArrived = onMqttMessageArrived;
+
+          arMqttClient.connect(options);  
+        }
+
+        function onMqttConnect(){
+          console.log('MQTT Client connected...');
+          
+          // subscribe to specific topics
+          console.log('Subscribing to \''+inventoryTopic+'\'');
+          arMqttClient.subscribe(inventoryTopic);
+          console.log('Subscription done...');
+        }
+
+        // called when the client loses its connection
+        function onMqttConnectionLost(responseObject) {
+          if (responseObject.errorCode !== 0) {
+            console.log("onConnectionLost:"+responseObject.errorMessage);
+          }
+        }
+
+        // called when a message arrives
+        function onMqttMessageArrived(message) {
+          console.log("MQTT message received:"+message.payloadString);
+          var msgObj = JSON.parse(message.payloadString);
+          var topicName = message.destinationName;
+          
+          if (inventoryTopic === topicName) {
+            if (msgObj.items){
+              /*
+              {
+                'items': [
+                  {'name' : 'torx screwdriver', qty: '0'},
+                  {'name' : 'allen key', qty: '10'},
+                  {'name' : 'pipe wrench', qty: '2'},
+                  {'name' : 'cross-point screwdriver', qty: '2'},
+                ]
+              }              
+              */
+              const inventoryList = document.getElementById('inventory-list');
+              inventoryList.innerHTML = '';
+              msgObj.items.forEach((item) => {
+                const itemNameDiv = document.createElement('div');
+                itemNameDiv.innerHTML = item.name;
+                if (item.qty === "0"){
+                  itemNameDiv.classList.add('not-available');
+                }
+                const itemQtyDiv = document.createElement('div');
+                itemQtyDiv.innerHTML = item.qty;
+                itemQtyDiv.classList.add('item-qty');
+                
+
+                inventoryList.appendChild(itemNameDiv);
+                inventoryList.appendChild(itemQtyDiv);
+              });
+            }
+          }
+        }
+      </script>
+      
+      
+      <script type="text/javascript">
+        connectMqttClient();
+      </script>
+    <!-- End -->
+  </body>
+</html>

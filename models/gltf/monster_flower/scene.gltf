@@ -1,0 +1,327 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 113,
+      "max": [
+        3.9376630783081055,
+        3.4044868946075439,
+        5.9041709899902344
+      ],
+      "min": [
+        -4.3627190589904785,
+        -5.1041140556335449,
+        0.5867919921875
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 1356,
+      "componentType": 5126,
+      "count": 113,
+      "max": [
+        0.99999994039535522,
+        0.98056483268737793,
+        1
+      ],
+      "min": [
+        -0.96257758140563965,
+        -0.95105689764022827,
+        -1
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 113,
+      "max": [
+        0.79946786165237427,
+        0.99998742341995239,
+        0.91497319936752319,
+        1
+      ],
+      "min": [
+        -0.43433436751365662,
+        -0.99091482162475586,
+        -0.60197901725769043,
+        1
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 113,
+      "max": [
+        0.98039597272872925,
+        0.97459197044372559
+      ],
+      "min": [
+        0.016813000664114952,
+        0.18603099882602692
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 267,
+      "max": [
+        112
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 2712,
+      "componentType": 5126,
+      "count": 6091,
+      "max": [
+        9.3184337615966797,
+        8.2315006256103516,
+        26.483072280883789
+      ],
+      "min": [
+        -8.2997827529907227,
+        -12.24862003326416,
+        -0.0031389999203383923
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 75804,
+      "componentType": 5126,
+      "count": 6091,
+      "max": [
+        0.99886238574981689,
+        0.99992811679840088,
+        1
+      ],
+      "min": [
+        -0.99992066621780396,
+        -0.9999728798866272,
+        -1
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 1808,
+      "componentType": 5126,
+      "count": 6091,
+      "max": [
+        0.99957722425460815,
+        0.99831682443618774,
+        0.99962204694747925,
+        1
+      ],
+      "min": [
+        -0.99905019998550415,
+        -0.99952638149261475,
+        -0.99996894598007202,
+        -1
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 904,
+      "componentType": 5126,
+      "count": 6091,
+      "max": [
+        0.98903501033782959,
+        0.99818199872970581
+      ],
+      "min": [
+        0.0019150000298395753,
+        -0.00051500002155080438
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 1068,
+      "componentType": 5125,
+      "count": 20463,
+      "max": [
+        6090
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Montar0 (https://sketchfab.com/Boxium_)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/models/48aab88195c549d0b723ff69508ed36f",
+      "title": "Monster Flower"
+    },
+    "generator": "Sketchfab-3.54.8-rc1",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 82920,
+      "byteOffset": 0,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 49632,
+      "byteOffset": 82920,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 148896,
+      "byteOffset": 132552,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 99264,
+      "byteOffset": 281448,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 380712,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/aiStandardSurface1SG_baseColor.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "aiStandardSurface1SG",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 0
+        },
+        "metallicFactor": 0,
+        "roughnessFactor": 0.59999999999999998
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 5,
+            "TANGENT": 7,
+            "TEXCOORD_0": 8
+          },
+          "indices": 9,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "name": "RootNode (gltf orientation matrix)",
+      "rotation": [
+        -0.70710678118654746,
+        -0,
+        -0,
+        0.70710678118654757
+      ]
+    },
+    {
+      "children": [
+        2
+      ],
+      "name": "RootNode (model correction matrix)"
+    },
+    {
+      "children": [
+        3,
+        4
+      ],
+      "name": "monstor flower.obj.cleaner.materialmerger.gles"
+    },
+    {
+      "mesh": 0,
+      "name": ""
+    },
+    {
+      "mesh": 1,
+      "name": ""
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "OSG_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    }
+  ]
+}
+

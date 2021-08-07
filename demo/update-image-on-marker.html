@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<head>
+  <base href="/threejs/">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<title>What an cloud...</title>
+  
+  <link href="css/common.css" rel="stylesheet">
+  <script src="js/common.js"></script>
+  
+	<!-- include three.js library -->
+	<script src='js/three.js'></script>
+	<!-- include jsartookit -->
+	<script src="jsartoolkit5/artoolkit.min.js"></script>
+	<script src="jsartoolkit5/artoolkit.api.js"></script>
+	<!-- include threex.artoolkit -->
+	<script src="threex/threex-artoolkitsource.js"></script>
+	<script src="threex/threex-artoolkitcontext.js"></script>
+	<script src="threex/threex-arbasecontrols.js"></script>
+	<script src="threex/threex-armarkercontrols.js"></script>
+</head>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+
+<div style="position: fixed; top: 10px; right: 10px; text-align: center; z-index: 1; ">
+  <div id="fullscreen-btn" onclick="requestFullScreen(document.body)" class="fullscreen"></div>
+</div>
+
+<script>
+
+var scene, camera, renderer, clock, deltaTime, totalTime;
+
+var arToolkitSource, arToolkitContext;
+
+var textureLoader;
+
+var cloudMesh;
+
+initialize();
+animate();
+
+function initialize()
+{
+	scene = new THREE.Scene();
+
+	let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.5 );
+	scene.add( ambientLight );
+				
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	renderer = new THREE.WebGLRenderer({
+		antialias : true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	renderer.setSize( 640, 480 );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	clock = new THREE.Clock();
+	deltaTime = 0;
+	totalTime = 0;
+	
+	////////////////////////////////////////////////////////////
+	// setup arToolkitSource
+	////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		sourceType : 'webcam',
+	});
+
+	function onResize()
+	{
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if ( arToolkitContext.arController !== null )
+		{
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	});
+	
+	// handle resize event
+	window.addEventListener('resize', function(){
+		onResize()
+	});
+	
+	////////////////////////////////////////////////////////////
+	// setup arToolkitContext
+	////////////////////////////////////////////////////////////	
+
+	// create atToolkitContext
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: 'data/camera_para.dat',
+		detectionMode: "mono_and_matrix",
+    matrixCodeType: "3x3_PARITY65",
+	});
+	
+	// copy projection matrix to camera when initialization complete
+	arToolkitContext.init( function onCompleted(){
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	});
+
+	////////////////////////////////////////////////////////////
+	// setup markerRoots
+	//////////////////////////////////////////////////////////// 
+  textureLoader = new THREE.TextureLoader();
+
+  var imgConfig = {
+    id: "cloud-mesh",
+    img: "images/green_cloud.png",
+    transparent: true,
+    position: { x: 0, y: 0, z: -2 },
+    rotation: { x : -Math.PI/2 },
+    marker: {
+      type: 'barcode', 
+      barcodeValue: 8
+    },
+    imgMesh: undefined
+  };
+  
+  addImage(imgConfig);
+  
+  cloudMesh = imgConfig.imgMesh;
+}
+
+function addImage (config){
+  /*
+  var imgConfig = {
+    id: "cloud-mesh",
+    img: "images/green_cloud.png",
+    transparent: true,
+    position: { x: 0, y: -2, z: 0 }
+    rotation: { x : -Math.PI/2 }
+    marker: {
+      type: 'barcode', 
+      barcodeValue: 1
+    }
+  }; */
+  
+  let markerGroup = new THREE.Group();
+	scene.add(markerGroup);
+	let markerControls = new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
+    type: config.marker.type, barcodeValue: config.marker.barcodeValue
+  });
+  
+
+  let geometry = new THREE.PlaneGeometry(1.2, 1.2);
+    
+  let imgMesh = new THREE.Mesh(
+    geometry, 
+    new THREE.MeshBasicMaterial({
+      map:textureLoader.load(config.img), transparent: config.transparent
+    })
+  );
+  imgMesh.position.x = config.position.x;
+  imgMesh.position.y = config.position.y;
+  imgMesh.position.z = config.position.z;
+   
+  imgMesh.id = config.id;
+  imgMesh.rotation.x = config.rotation.x;
+  //imgMesh.translateZ( -0.5 );
+  markerGroup.add(imgMesh);
+  
+  config.imgMesh = imgMesh;
+}
+
+function update()
+{
+	// update artoolkit on every frame
+	if ( arToolkitSource.ready !== false )
+		arToolkitContext.update( arToolkitSource.domElement );
+}
+
+function render()
+{
+	renderer.render( scene, camera );
+}
+
+function animate()
+{
+	requestAnimationFrame(animate);
+	deltaTime = clock.getDelta();
+	totalTime += deltaTime;
+	update();
+	render();
+}
+
+// load texture
+function loadTexture(path, object) {
+  textureLoader.load(path, function(texture) {
+    object.traverse(function(child) {
+      if (child instanceof THREE.Mesh) {
+        child.material.map = texture;
+        child.material.needsUpdate = true;
+      }
+    });
+  });
+}
+
+</script>
+
+<!-- include socket.io client side $ -->
+<script src="js/socket.io.js"></script> 
+<script>
+  var socket = io(); //load socket.io-client and connect to the host that serves the page
+  
+  socket.on('connect', function (data) {
+    socket.emit('storeClientInfo', { customId:"cloud-switch-ar" });
+  });
+  
+  // code found
+  socket.on('change-cloud-image', function (message) {
+    // message : {state: on}
+    if (message.state) {
+      switch (message.state) {
+        case 'on':
+          loadTexture('images/green_cloud.png', cloudMesh);
+          break;
+        case 'off':
+          loadTexture('images/orange_cloud.png', cloudMesh);
+          break;
+        default:
+          break;
+      } 
+    }
+  });
+</script>
+
+</body>
+</html>
