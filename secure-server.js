@@ -3,7 +3,7 @@ const url = require('url')
 const fs = require('fs');
 var static = require('node-static');
 
-/* MQTT client init*/    
+/* MQTT client init*/
 var mqtt=require('mqtt');
 
 let mqttConfigData = fs.readFileSync('./mqtt-config.json');
@@ -18,7 +18,7 @@ const options = {
 var brokerUrl = `${mqttConfig.broker.protocol}://${mqttConfig.broker.host}:${mqttConfig.broker.port}`;
 console.log(`Connecting to: '${brokerUrl}'`);
 var mqttClient = mqtt.connect(brokerUrl, options)
-mqttClient.on("connect",function(){	
+mqttClient.on("connect",function(){
   console.log("MQTT connected");
 });
 
@@ -40,7 +40,7 @@ mqttClient.on('message', function (topic, msg) {
     console.error("Failed to parse received message");
     return console.error(e);
   }
-  
+
   // search web socket to transfer message
   mqttConfig.subscribers.forEach( (config) => {
     if (config.topic === topic){
@@ -96,7 +96,7 @@ io.attach(httpsServer);
 io.sockets.on('connection', function connection(ws) {
   console.log('connection: '+ws.id);
   sockets[ws.id] = ws;
-  
+
   ws.on('storeClientInfo', function (data) {
       var clientInfo = new Object();
       clientInfo.customId = data.customId;
@@ -123,7 +123,7 @@ io.sockets.on('connection', function connection(ws) {
         let mqttMsg = false;
         // search if message has to be sent as MQTT message
         mqttConfig.publishers.forEach( (config) => {
-          if (message.to === config['ws-to'] && message.event === config['ws-event']){
+          if (to === config['ws-to'] && message.event === config['ws-event']){
             console.log(`Publishing MQTT message to topic '${config.topic}'`);
             mqttClient.publish(config.topic, message.message);
             mqttMsg = true;
@@ -144,7 +144,7 @@ io.sockets.on('connection', function connection(ws) {
         return console.error(e);
       }
   });
-  
+
   ws.on('getStoredValue', function incoming(msg) {
     console.log('getStoredValue received: ', msg);
     /*
@@ -155,13 +155,13 @@ io.sockets.on('connection', function connection(ws) {
     let message = msg;
     try {
       console.log('msg cache: ', msgCache);
-      
+
       let to = message.to;
       let lastMsg = msgCache.get(message.valueName);
       console.log('lastMsg: ', lastMsg);
-      if(clients[message.to]){
-        console.log('sending message to socket: ', clients[message.to].clientId, lastMsg);
-        sockets[clients[message.to].clientId].emit(message['ws-reply-event'], lastMsg);
+      if(clients[to]){
+        console.log('sending message to socket: ', clients[to].clientId, lastMsg);
+        sockets[clients[to].clientId].emit(message['ws-reply-event'], lastMsg);
       } else {
         console.error('No client socket found');
       }
@@ -171,4 +171,3 @@ io.sockets.on('connection', function connection(ws) {
     }
   });
 });
-

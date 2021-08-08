@@ -3,10 +3,10 @@
   <base href="/threejs/">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<title>What a 3D model...</title>
-  
+
   <link href="css/common.css" rel="stylesheet">
   <script src="js/common.js"></script>
-  
+
 	<!-- include three.js library -->
 	<script src='js/three.js'></script>
   <script src='js/GLTFLoader.js'></script>
@@ -40,7 +40,6 @@ var markerGroup;
 var mixers = [];
 
 var animationIdx = 0;
-
 initialize();
 animate();
 
@@ -50,7 +49,7 @@ function initialize()
 
 	let ambientLight = new THREE.AmbientLight( 0xcccccc, 1.0 );
 	scene.add( ambientLight );
-				
+
 	camera = new THREE.Camera();
 	scene.add(camera);
 
@@ -68,7 +67,7 @@ function initialize()
 	clock = new THREE.Clock();
 	deltaTime = 0;
 	totalTime = 0;
-	
+
 	////////////////////////////////////////////////////////////
 	// setup arToolkitSource
 	////////////////////////////////////////////////////////////
@@ -79,26 +78,26 @@ function initialize()
 
 	function onResize()
 	{
-		arToolkitSource.onResize()	
-		arToolkitSource.copySizeTo(renderer.domElement)	
+		arToolkitSource.onResize()
+		arToolkitSource.copySizeTo(renderer.domElement)
 		if ( arToolkitContext.arController !== null )
 		{
-			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
-		}	
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)
+		}
 	}
 
 	arToolkitSource.init(function onReady(){
 		onResize()
 	});
-	
+
 	// handle resize event
 	window.addEventListener('resize', function(){
 		onResize()
 	});
-  
+
   ////////////////////////////////////////////////////////////
 	// setup arToolkitContext
-	////////////////////////////////////////////////////////////	
+	////////////////////////////////////////////////////////////
 
 	// create atToolkitContext
 	arToolkitContext = new THREEx.ArToolkitContext({
@@ -106,12 +105,12 @@ function initialize()
 		detectionMode: "mono_and_matrix",
     matrixCodeType: "3x3_PARITY65",
 	});
-	
+
 	// copy projection matrix to camera when initialization complete
 	arToolkitContext.init( function onCompleted(){
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	});
-	
+
 	////////////////////////////////////////////////////////////////////////////////
   //          Create a ArMarkerControls
   ////////////////////////////////////////////////////////////////////////////////
@@ -123,10 +122,10 @@ function initialize()
 	let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerGroup, {
     type: 'barcode', barcodeValue: 2,
   });
- 
+
   var lightGreyMaterial = new THREE.MeshBasicMaterial( { color: 0xcccccc, opacity: 0.5 } );
   var sphereGeometry = new THREE.SphereGeometry( 0.2, 32, 32 );
-  
+
   let sphere = new THREE.Mesh( sphereGeometry, lightGreyMaterial );
   sphere.name = "sphere-marker";
   sphere.position.x = 0;
@@ -149,7 +148,7 @@ function initialize()
       model = gltf.scene;
       model.name = 'Flower';
       model.scale.set(0.5,0.5,0.5);
-      
+
       markerGroup.add(model);
       document.getElementById("spinner").style.display = 'none';
     });
